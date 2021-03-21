@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "list.h": "c",
+        "stdio.h": "c",
+        "osa.h": "c",
+        "pthread.h": "c"
+    }
+}
