@@ -9,4 +9,11 @@ typedef struct
     Ptr  next;
 }Head;
 
+typedef struct _Node
+{
+    struct _Node   *pnext;
+    struct _Node   *pre;
+}Node;
+
+
 #endif

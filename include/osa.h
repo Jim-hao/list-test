@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <linux/unistd.h>
 
 #define THREAD_NAME_LEN  (20)
 
@@ -100,7 +101,5 @@ typedef  struct
     Func             func;
     thread_info      param;
 }OSA_Thread;
-
-extern int  OSA_threadCreate(OSA_Thread *pthreadHand);
 
 #endif

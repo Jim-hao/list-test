@@ -1,5 +1,7 @@
 #include "osa.h"
 
+pid_t gettid(void){ return syscall(__NR_gettid); }
+
 int  OSA_threadCreate(OSA_Thread *pthreadHand)
 {
     int status = 0;
