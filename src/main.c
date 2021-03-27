@@ -1,45 +1,56 @@
 #include "osa.h"
 #include "list.h"
+#include "file.h"
 
-void *func(void *ptr)
+typedef struct wkfl_demo
 {
-    thread_info  *tinfo = (thread_info *)ptr;
-    pid_t  tid = gettid();
+    DirInfo   dirInfo;
+    FileInfo  *pfileInfo;
+}WKFL_DEMO;
 
-    while(tinfo->isalive > 0)
-    {
-        OSA_INFO("gettid:%d\n", tid);
-        sleep(2);
-    }
-
-    OSA_INFO("thread:%s exit %d\n", tinfo->name, tid);
-}
+ static void DEMO_HELP()
+ {
+     printf(" for example: \n"
+            "   ./test.out -d ./data/  \n");
+ }
 
 Int32 main(Int32 argc, char *argv[])
 {
-    Int32  status =  0;
-
-    OSA_Thread  *pthread = calloc(1, sizeof(OSA_Thread));
-    pthread->func  = func;
-    pthread->param.isalive  = 1;
-    strncpy(pthread->param.name, "func1", strlen("func1")-1);
-    status = OSA_threadCreate(pthread);
-    if (OSA_isFalse(status))
+    if (argc < 3)
     {
-        OSA_ERROR("OSA_threadCreate faild! %d\n", status);
+        DEMO_HELP();
+        return -1;
     }
 
-    int count = 2;
-    while(count > 0)
+    Char  ch = 0;
+    WKFL_DEMO  *pObj = (WKFL_DEMO *)calloc(1, sizeof(WKFL_DEMO));
+    do
     {
-        sleep(10);
-        count--;
-        OSA_INFO("main is running\n");
-    };
+        ch = getopt(argc, argv, "hp:d:o:");
+        switch(ch)
+        {
+            case 'h':
+                DEMO_HELP();
+            case 'p':
+                break;
+            case 'o':
+                break;
+            case 'd':
+                pObj->dirInfo.dirpath = optarg;
+                break;
+            default:
+                break;
+        }
+    } while(ch > 0);
 
-    OSA_threadCancle(pthread);
-    OSA_threadDelete(pthread);
+    DIR_preInit(&pObj->dirInfo);
 
+    FILE_preInit(&pObj->dirInfo, &pObj->pfileInfo);
+
+    FILE_getResult(&pObj->pfileInfo[0], 1);
+
+    free(pObj->pfileInfo);
+    free(pObj);
     OSA_INFO("main exit\n");
     return  0;
 }

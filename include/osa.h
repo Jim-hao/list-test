@@ -10,6 +10,8 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <linux/unistd.h>
+#include <time.h>    /* for nanosleep */
+#include <dirent.h>  /* for dir */
 
 #define THREAD_NAME_LEN  (20)
 
@@ -21,6 +23,7 @@
 #define  OSA_SUCCESS         (1)
 #define  OSA_SOK             (0)
 #define  OSA_FALSE           (-1)
+#define  OSA_EFAULT          (-1)
 #define  OSA_NULL            (NULL)
 #define  OSA_isFalse(value)  ((value) != OSA_SOK)
 #define  OSA_isNull(ptr)     ((OSA_NULL == ptr) ? 1 : 0)
@@ -75,17 +78,14 @@
 #define  OSA_DEBUG(format, ...)
 #endif     
 
+#define  OSA_msleep(time)  \
+         usleep((time) * 1000)
+
 #define handle_error_en(en, msg) \
         do { errno = en; perror(msg); exit(EXIT_FAILURE); } while (0)
 
 #define handle_error(msg) \
         do { perror(msg); exit(EXIT_FAILURE); } while (0)
-
-#define  OSA_offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
-
-#define  OSA_container(ptr, type, member) ({                       \
-            const typeof( ((type *)0)->member ) *__mptr = (ptr);    \
-            (type *)( (char *)__mptr - offsetof(type,member) );})
 
 typedef  void *(*Func)(void *);
 typedef  struct
