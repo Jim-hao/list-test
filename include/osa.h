@@ -12,8 +12,7 @@
 #include <linux/unistd.h>
 #include <time.h>    /* for nanosleep */
 #include <dirent.h>  /* for dir */
-
-#define THREAD_NAME_LEN  (20)
+#include <pthread.h>
 
 #define  Char      char
 #define  Int32     signed int
@@ -28,6 +27,8 @@
 #define  OSA_isFalse(value)  ((value) != OSA_SOK)
 #define  OSA_isNull(ptr)     ((OSA_NULL == ptr) ? 1 : 0)
 #define  OSA_isNotNull(ptr)  ((OSA_NULL != ptr) ? 1 : 0)
+
+#define  OSA_mutex           pthread_mutex_t
 
 #define  NONE         "\033[m" 
 #define  RED          "\033[0;32;31m" 
@@ -87,20 +88,5 @@
 
 #define handle_error(msg) \
         do { perror(msg); exit(EXIT_FAILURE); } while (0)
-
-typedef  void *(*Func)(void *);
-typedef  struct
-{
-    Int32            isalive;
-    Char             name[THREAD_NAME_LEN];
-}thread_info;
-
-typedef  struct
-{
-    pthread_t        threadId;
-    pthread_attr_t   attribute;
-    Func             func;
-    thread_info      param;
-}OSA_Thread;
 
 #endif

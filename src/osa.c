@@ -1,6 +1,27 @@
 #include "osa.h"
+#include "thread.h"
 
 pid_t gettid(void){ return syscall(__NR_gettid); }
+
+void OSA_mutexCreate(void *pmutex)
+{
+    pthread_mutex_init(pmutex, NULL);
+}
+
+void OSA_mutexLock(void *pmutex)
+{
+    pthread_mutex_lock(pmutex);
+}
+
+void OSA_mutexUnLock(void *pmutex)
+{
+    pthread_mutex_unlock(pmutex);
+}
+
+void OSA_mutexDestroy(void *pmutex)
+{
+    pthread_mutex_destroy(pmutex);
+}
 
 int  OSA_threadCreate(OSA_Thread *pthreadHand)
 {
@@ -75,9 +96,7 @@ Int32  OSA_threadDelete(OSA_Thread *pthread)
     OSA_INFO("thread %s delele. join value:%s\n", pthread->param.name, (char *)joinmsg);
     memset(pthread->param.name, 0, THREAD_NAME_LEN);
     free(joinmsg);
-    free(pthread);
     joinmsg = OSA_NULL;
-    pthread = OSA_NULL;
 
     return OSA_SOK;
 }

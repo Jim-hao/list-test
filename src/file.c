@@ -5,10 +5,19 @@
 #define  MAX_COLUM_LEN     (10)
 #define  MAX_COMMAND_LEN   (100)
 
+Int32  FILE_getlineNum(Char *pfilePath, Int32 *plineNum);
+
 /* analyse the file dir  */
-Int32  DIR_preInit(DirInfo *pdirInfo)
+Int32  DIR_preInit(DirInfo **ppdirInfo, Char *pDirPath)
 {
     struct dirent *ptr = OSA_NULL;
+
+    /* calloc dir memory */
+    *ppdirInfo = (DirInfo *)calloc(1, sizeof(DirInfo));
+    DirInfo *pdirInfo = *ppdirInfo;
+    pdirInfo->dirpath = pDirPath;
+
+    /* open dir */
     pdirInfo->pdir = opendir(pdirInfo->dirpath);
     while((ptr = readdir(pdirInfo->pdir)) != OSA_NULL)
     {
@@ -34,7 +43,7 @@ Int32  FILE_memoryInit(DirInfo  *dirInfo, FileInfo  **ppfileInfo)
         return OSA_EFAULT;        
     }
 
-    /* calloc */
+    /* calloc file memory */
     *ppfileInfo = (FileInfo *)calloc(dirInfo->fileNum, sizeof(FileInfo));
     ptmpfile = *ppfileInfo;
     while((ptr = readdir(pdir)) != OSA_NULL)
@@ -42,11 +51,12 @@ Int32  FILE_memoryInit(DirInfo  *dirInfo, FileInfo  **ppfileInfo)
         if (strlen(ptr->d_name) > 2)
         {
             /* joint the fileName and dirpath together */
-            snprintf(ptmpfile->fileName, MAX_FILENAME_LEN, "%s%s", dirInfo->dirpath, ptr->d_name);           
-            OSA_INFO("file Name: %s\n",  ptmpfile->fileName);
+            Int32 len = strlen(dirInfo->dirpath) + strlen(ptr->d_name);
+            snprintf(ptmpfile->fileName, len, "%s%s", dirInfo->dirpath, ptr->d_name);                    
             FILE_getlineNum(ptmpfile->fileName, &ptmpfile->lineNum);
+            OSA_INFO("file Name: %s  linenum:%d\n",  ptmpfile->fileName, ptmpfile->lineNum);
             ptmpfile->pDataResult = (Char *)calloc(ptmpfile->lineNum, sizeof(Char) * 3);
-            ptmpfile++;
+            ptmpfile += sizeof(FileInfo);
         }
     }
 
@@ -56,28 +66,29 @@ Int32  FILE_memoryInit(DirInfo  *dirInfo, FileInfo  **ppfileInfo)
 
 Int32  FILE_getlineNum(Char *pfilePath, Int32 *plineNum)
 {
-    Int32 linenum = 0;
-    size_t bufflen = 0;
-    Char *pline = OSA_NULL;
+    volatile Int32 linenum = 0;
 
-    FILE *pfile = fopen(pfilePath, "r+");
+    FILE *pfile = fopen(pfilePath, "r");
     if (OSA_isNull(pfile))
     {
         perror("fopen");
         return OSA_EFAULT;
     }
 
-    while(getline(&pline, &bufflen, pfile) != -1)
+    Char *pline = OSA_NULL;
+    size_t len = 0;
+    while(getline(&pline, &len, pfile) != -1)
     {    
         ++linenum;
     }
-
+    
     *plineNum = linenum;
 
+    free(pline);
     fclose(pfile);
     pfile = OSA_NULL;
 
-    return OSA_SOK;
+    return linenum;
 }
 
 static void FILE_readcolum(Char *pline, Int32 columnNum, Char *result)
@@ -122,24 +133,24 @@ static void FILE_readcolum(Char *pline, Int32 columnNum, Char *result)
     pcolum = OSA_NULL;
 }
 
-Int32  FILE_getResult(FileInfo  *pfileInfo, Int32 columnNum)
+static Int32  FILE_analyData(FileInfo *pfileInfo, Int32 columnNum)
 {
-    Int32  i =  0;
     size_t bufflen = 0;
     Char *pline = OSA_NULL;
     Char *pcur = OSA_NULL;
-
+   
     FILE *pfile = fopen(pfileInfo->fileName, "r+");
     if (OSA_isNull(pfile))
     {
         perror("fopen");
         return -1;
     }
-    
+
+    Int32 linenum = 0;
     while(getline(&pline, &bufflen, pfile) != -1)
     {    
-        FILE_readcolum(pline, columnNum, pfileInfo->pDataResult+(i*3));
-        ++i;
+        FILE_readcolum(pline, columnNum, pfileInfo->pDataResult+(linenum*3));
+        ++linenum;
     }
 
     fclose(pfile);
@@ -148,5 +159,19 @@ Int32  FILE_getResult(FileInfo  *pfileInfo, Int32 columnNum)
     if (OSA_isNotNull(pline))
     {
         free(pline);
+    }
+
+    return OSA_SOK;
+}
+
+Int32 FILE_getResult(DirInfo *dirInfo, FileInfo *fileInfo, Int32 columNum)
+{
+    Int32  i = 0;
+
+    for (i = 0; i < dirInfo->fileNum; i++)
+    {
+        FileInfo *pfile = fileInfo + (i * sizeof(FileInfo));
+        OSA_INFO("analyse file: %s, %d\n", pfile->fileName, pfile->lineNum);
+        FILE_analyData(pfile, columNum);
     }
 }

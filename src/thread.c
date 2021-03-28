@@ -1,18 +1,36 @@
 #include "osa.h"
 #include "list.h"
+#include "thread.h"
+#include "file.h"
+#include "demo.h"
 
 #define SCENE_TYPE_TOTAL  10
 
-int  data[SCENE_TYPE_TOTAL] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-SceneManager *pNodeArray[SCENE_TYPE_TOTAL] = {0};
 extern SceneManager gSceneHead;
 
-void *func(void *ptr)
-{
-    thread_info  *tinfo = (thread_info *)ptr;
-    pid_t  tid = gettid();
+void *Thread_func(void *ptr);
+void Thread_create(OSA_Thread  *pthread, Int32 threadNum, void *ptr);
+Int32  Thread_taskCreate(void *ptr);
 
-    int i = 0;
+void *Thread_func(void *ptr)
+{
+    Int32  i = 0;
+    thread_info *threadInfo = (thread_info *)ptr;
+    WKFL_DEMO *pObj = (WKFL_DEMO *)(threadInfo->ptr);
+    FileInfo *pfile = pObj->pfileInfo + threadInfo->filenumber;
+
+    pid_t  tid = gettid();
+    for (i = 0; i < pfile->lineNum; i++)
+    {
+        Char *pdata = pfile->pDataResult + (i * 3);
+        // OSA_mutexLock(&pObj->wkflMutex);
+        // pObj->totoalLine++;
+        // OSA_mutexUnLock(&pObj->wkflMutex);
+        //OSA_DEBUG("%s  %1c%1c%1c\n",threadInfo->name, pdata[0], pdata[1], pdata[2]);
+        //OSA_msleep(250);
+    }
+
+/*     int i = 0;
     OSA_ListHead *pnode = OSA_NULL;
     OSA_ListHead *pnext = OSA_NULL;
     SceneManager *pSceneNode = OSA_NULL;
@@ -33,39 +51,59 @@ void *func(void *ptr)
     for (i = 0; i < SCENE_TYPE_TOTAL;  i++)
     {
         free(pNodeArray[i]);
-    }
+    } */
 
-    while(tinfo->isalive > 0)
-    {
-        OSA_INFO("gettid:%d\n", tid);
-        sleep(2);
-    }
+    OSA_mutexLock(&pObj->wkflMutex);
+    pObj->extThreadNum++;
+    OSA_mutexUnLock(&pObj->wkflMutex);
 
-    OSA_INFO("thread:%s exit %d\n", tinfo->name, tid);
+    OSA_INFO("thread:%s exit %d\n", threadInfo->name, tid);
 }
 
-void create()
+void Thread_create(OSA_Thread  *pthread, Int32  threadNum, void *ptr)
 {
     Int32  status =  0;
+    WKFL_DEMO  *pObj = (WKFL_DEMO *)ptr; 
 
-    OSA_Thread  *pthread = calloc(1, sizeof(OSA_Thread));
-    pthread->func  = func;
-    pthread->param.isalive  = 1;
-    strncpy(pthread->param.name, "func1", strlen("func1")-1);
+    pthread->func  = Thread_func;
+    pthread->param.isalive    = 1;
+    pthread->param.filenumber = 0; 
+    pthread->param.ptr        = ptr;
+    snprintf(pthread->param.name, THREAD_NAME_LEN, "%s%d", "Thread__", threadNum);
     status = OSA_threadCreate(pthread);
     if (OSA_isFalse(status))
     {
         OSA_ERROR("OSA_threadCreate faild! %d\n", status);
     }
+}
 
-    int count = 2;
-    while(count > 0)
+/* 1.Create threads. 2.Distribute the tasks. */
+Int32  Thread_taskCreate(void *ptr)
+{
+    Int32  i = 0;
+    WKFL_DEMO *pObj = (WKFL_DEMO *)ptr;
+    OSA_mutexCreate(&pObj->wkflMutex);
+    pObj->pthreads = calloc(pObj->dirInfo->fileNum, sizeof(OSA_Thread));
+
+    for (i = 0; i < pObj->dirInfo->fileNum; i++)
     {
-        sleep(10);
-        count--;
-        OSA_INFO("main is running\n");
+        Thread_create(&pObj->pthreads[i], i, ptr);
+    }
+
+    while(pObj->extThreadNum < pObj->dirInfo->fileNum)
+    {
+        OSA_msleep(100);
+        OSA_INFO("main is running  exitThreadNum:%d\n", pObj->extThreadNum);
     };
 
-    OSA_threadCancle(pthread);
-    OSA_threadDelete(pthread);
+    //OSA_WARN("total line:%d\n", pObj->totoalLine);
+
+    OSA_mutexDestroy(&pObj->wkflMutex);
+
+    for (i = 0; i < pObj->dirInfo->fileNum; i++)
+    {
+        OSA_threadDelete(&pObj->pthreads[i]);
+    }
+
+    free(pObj->pthreads);
 }

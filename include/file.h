@@ -2,7 +2,7 @@
 #define __FILE_H__
 #include "osa.h"
 
-#define  MAX_FILENAME_LEN     (100)
+#define  MAX_FILENAME_LEN     (50)
 #define  MAX_DATARESULT_LEN   (3)
 
 typedef struct

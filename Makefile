@@ -1,20 +1,20 @@
 TARGET=test_list
-CFLAGS+= -W -D$(print)            # 从终端接收变量, 并传入代码。
-                                  # 定义CFLAGS等同于 $(CC) $(SRC) -D$(PRINT) -o $(OUTPUT)
-CROSS=aarch64-himix100-linux-
+CFLAGS+= -W -D$(print) #-fsanitize=address    # 从终端接收变量, 并传入代码。
+
 plat=x86
 ifeq ($(plat), x86)
 CC=gcc
 else ifeq ($(plat), arm)
-CC=$(CROSS)gcc
-CPP=$(CROSS)g++
+CROSS=aarch64-himix100-linux-
+CC=aarch64-himix100-linux-gcc
+CPP=aarch64-himix100-linux-g++
 endif
 
 objs=$(patsubst %.c, %.o, $(wildcard ./src/*.c))
 INC+=-I ./include
 
 OUTPUT=$(TARGET).$(plat)
-LDFLAGS= -o0 -g -lpthread
+LDFLAGS= -o0 -g -lpthread #-lasan
 
 $(OUTPUT):$(objs)
 	$(CC) $^ $(CFLAGS) $(LDFLAGS) -o $(OUTPUT)
