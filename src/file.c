@@ -2,8 +2,8 @@
 #include "list.h"
 #include "file.h"
 
-#define  MAX_COLUM_LEN  (10)
-#define  CMD_LEN        (100)
+#define  MAX_COLUM_LEN     (10)
+#define  MAX_COMMAND_LEN   (100)
 
 /* analyse the file dir  */
 Int32  DIR_preInit(DirInfo *pdirInfo)
@@ -22,7 +22,7 @@ Int32  DIR_preInit(DirInfo *pdirInfo)
 }
 
 /* calloc file memory, get total lines for each file */
-Int32  FILE_preInit(DirInfo  *dirInfo, FileInfo  **ppfileInfo)
+Int32  FILE_memoryInit(DirInfo  *dirInfo, FileInfo  **ppfileInfo)
 {
     struct dirent  *ptr = OSA_NULL;
     FileInfo  *ptmpfile = OSA_NULL;
@@ -45,6 +45,7 @@ Int32  FILE_preInit(DirInfo  *dirInfo, FileInfo  **ppfileInfo)
             snprintf(ptmpfile->fileName, MAX_FILENAME_LEN, "%s%s", dirInfo->dirpath, ptr->d_name);           
             OSA_INFO("file Name: %s\n",  ptmpfile->fileName);
             FILE_getlineNum(ptmpfile->fileName, &ptmpfile->lineNum);
+            ptmpfile->pDataResult = (Char *)calloc(ptmpfile->lineNum, sizeof(Char) * 3);
             ptmpfile++;
         }
     }
@@ -79,10 +80,10 @@ Int32  FILE_getlineNum(Char *pfilePath, Int32 *plineNum)
     return OSA_SOK;
 }
 
-static void FILE_readcolum(Char *pline, Int32 columnNum)
+static void FILE_readcolum(Char *pline, Int32 columnNum, Char *result)
 {
     Int32  i, j = 0;
-    Char  cmd[CMD_LEN] = {0};
+    Char  cmd[MAX_COMMAND_LEN] = {0};
     Char  *pcur = cmd;
 
     Char **pcolum = (Char **)calloc(columnNum, sizeof(Char *));
@@ -99,13 +100,18 @@ static void FILE_readcolum(Char *pline, Int32 columnNum)
             pcur += 3;
         }
         memcpy(pcur, "%s", 3);
-        pcur = cmd;  /* return to cmd */
+        pcur = cmd;     
         sscanf(pline, cmd, pcolum[i]);
-        OSA_DEBUG("%5s", pcolum[i]);
+
+        /* analyse result */
+        result[0] = pcolum[i][1];
+        result[1] = pcolum[i][3];
+        result[2] = pcolum[i][5];
+        //OSA_DEBUG("%5s\n",pcolum[i]);
+        //OSA_DEBUG("%1c%1c%1c\n", result[0], result[1], result[2]);
         memset(cmd, 0, sizeof(cmd));                
     }
-    putchar(10);
-
+ 
     for (i = 0;  i < columnNum; i++)
     {
         free(pcolum[i]);
@@ -121,6 +127,7 @@ Int32  FILE_getResult(FileInfo  *pfileInfo, Int32 columnNum)
     Int32  i =  0;
     size_t bufflen = 0;
     Char *pline = OSA_NULL;
+    Char *pcur = OSA_NULL;
 
     FILE *pfile = fopen(pfileInfo->fileName, "r+");
     if (OSA_isNull(pfile))
@@ -128,17 +135,17 @@ Int32  FILE_getResult(FileInfo  *pfileInfo, Int32 columnNum)
         perror("fopen");
         return -1;
     }
-
+    
     while(getline(&pline, &bufflen, pfile) != -1)
     {    
-        FILE_readcolum(pline, columnNum);
-        //OSA_msleep(500);
+        FILE_readcolum(pline, columnNum, pfileInfo->pDataResult+(i*3));
+        ++i;
     }
 
     fclose(pfile);
     pfile = OSA_NULL;
 
-    if (OSA_NULL != pline)
+    if (OSA_isNotNull(pline))
     {
         free(pline);
     }

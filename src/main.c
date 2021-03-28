@@ -10,7 +10,7 @@ typedef struct wkfl_demo
 
  static void DEMO_HELP()
  {
-     printf(" for example: \n"
+     printf(" for example:             \n"
             "   ./test.out -d ./data/  \n");
  }
 
@@ -42,12 +42,13 @@ Int32 main(Int32 argc, char *argv[])
                 break;
         }
     } while(ch > 0);
-
+  
     DIR_preInit(&pObj->dirInfo);
 
-    FILE_preInit(&pObj->dirInfo, &pObj->pfileInfo);
+    FILE_memoryInit(&pObj->dirInfo, &pObj->pfileInfo);
 
-    FILE_getResult(&pObj->pfileInfo[0], 1);
+    FileInfo  *pFile = &pObj->pfileInfo[0];
+    FILE_getResult(pFile, 1);
 
     free(pObj->pfileInfo);
     free(pObj);

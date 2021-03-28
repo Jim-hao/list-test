@@ -27,6 +27,7 @@
 #define  OSA_NULL            (NULL)
 #define  OSA_isFalse(value)  ((value) != OSA_SOK)
 #define  OSA_isNull(ptr)     ((OSA_NULL == ptr) ? 1 : 0)
+#define  OSA_isNotNull(ptr)  ((OSA_NULL != ptr) ? 1 : 0)
 
 #define  NONE         "\033[m" 
 #define  RED          "\033[0;32;31m" 
