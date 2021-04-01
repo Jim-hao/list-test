@@ -4,54 +4,23 @@
 #include "file.h"
 #include "demo.h"
 
-#define SCENE_TYPE_TOTAL  10
-
-extern SceneManager gSceneHead;
-
-void *Thread_func(void *ptr);
-void Thread_create(OSA_Thread  *pthread, Int32 threadNum, void *ptr);
-Int32  Thread_taskCreate(void *ptr);
-
 void *Thread_func(void *ptr)
 {
     Int32  i = 0;
     thread_info *threadInfo = (thread_info *)ptr;
     WKFL_DEMO *pObj = (WKFL_DEMO *)(threadInfo->ptr);
     FileInfo *pfile = pObj->pfileInfo + threadInfo->filenumber;
+    LIST_PARAM  param = {0};
 
     pid_t  tid = gettid();
     for (i = 0; i < pfile->lineNum; i++)
     {
         Char *pdata = pfile->pDataResult + (i * 3);
-        // OSA_mutexLock(&pObj->wkflMutex);
-        // pObj->totoalLine++;
-        // OSA_mutexUnLock(&pObj->wkflMutex);
+        param.data  = pdata;
+        param.type  = DATA_REDUCE;
+        threadInfo->callback(&param);
         //OSA_DEBUG("%s  %1c%1c%1c\n",threadInfo->name, pdata[0], pdata[1], pdata[2]);
-        //OSA_msleep(250);
     }
-
-/*     int i = 0;
-    OSA_ListHead *pnode = OSA_NULL;
-    OSA_ListHead *pnext = OSA_NULL;
-    SceneManager *pSceneNode = OSA_NULL;
-
-    for (i = 0;  i < SCENE_TYPE_TOTAL; i++)
-    {
-        pNodeArray[i] = calloc(1, sizeof(SceneManager));
-        pNodeArray[i]->sceneType = data[i];
-        OSA_listAddTail(&gSceneHead.listHead, &pNodeArray[i]->listHead);
-    }
-
-    OSA_listForEachSafe(pnode, pnext, &gSceneHead.listHead)
-    {
-        pSceneNode = OSA_listEntry(pnode, SceneManager, listHead);
-        OSA_INFO("%d\n", pSceneNode->sceneType);        
-    }
-
-    for (i = 0; i < SCENE_TYPE_TOTAL;  i++)
-    {
-        free(pNodeArray[i]);
-    } */
 
     OSA_mutexLock(&pObj->wkflMutex);
     pObj->extThreadNum++;
@@ -67,9 +36,10 @@ void Thread_create(OSA_Thread  *pthread, Int32  threadNum, void *ptr)
 
     pthread->func  = Thread_func;
     pthread->param.isalive    = 1;
-    pthread->param.filenumber = 0; 
+    pthread->param.filenumber = 0;
+    pthread->param.callback   = (Func)LIST_CallBack;
     pthread->param.ptr        = ptr;
-    snprintf(pthread->param.name, THREAD_NAME_LEN, "%s%d", "Thread__", threadNum);
+    snprintf(pthread->param.name, THREAD_NAME_LEN, "%s%d", "Thread", threadNum);
     status = OSA_threadCreate(pthread);
     if (OSA_isFalse(status))
     {

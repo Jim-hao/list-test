@@ -12,6 +12,7 @@ typedef  struct
     Int32            isalive;
     Int32            filenumber;
     Char             name[THREAD_NAME_LEN];
+    Func             callback;
     void            *ptr;
 }thread_info;
 
@@ -22,5 +23,7 @@ typedef  struct
     Func             func;
     thread_info      param;
 }OSA_Thread;
+
+extern Int32  Thread_taskCreate(void *ptr);
 
 #endif

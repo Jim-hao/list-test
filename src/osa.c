@@ -23,9 +23,10 @@ void OSA_mutexDestroy(void *pmutex)
     pthread_mutex_destroy(pmutex);
 }
 
-int  OSA_threadCreate(OSA_Thread *pthreadHand)
+int  OSA_threadCreate(void  *pHandle)
 {
     int status = 0;
+    OSA_Thread *pthreadHand = (OSA_Thread *)pHandle;
 
     if (OSA_isNull(pthreadHand))
     {
@@ -53,48 +54,51 @@ int  OSA_threadCreate(OSA_Thread *pthreadHand)
     return status;
 }
 
-Int32  OSA_threadCancle(OSA_Thread *pthread)
+Int32  OSA_threadCancle(void *pHandle)
 {
-    if (OSA_isNull(pthread))
+    OSA_Thread *pthreadHand = (OSA_Thread *)pHandle;
+
+    if (OSA_isNull(pthreadHand))
     {
         OSA_ERROR("%s is NULL\n", __FUNCTION__);
         return OSA_FALSE;
     }
 
-    pthread->param.isalive = -1;
+    pthreadHand->param.isalive = -1;
 
     sleep(2);
 
     return OSA_SOK;
 }
 
-Int32  OSA_threadDelete(OSA_Thread *pthread)
+Int32  OSA_threadDelete(void *pHandle)
 {
     Int32    status = 0;
     void     *joinmsg = NULL;
+    OSA_Thread *pthreadHand = (OSA_Thread *)pHandle;
 
-    if (OSA_isNull(pthread))
+    if (OSA_isNull(pthreadHand))
     {
         OSA_ERROR("%s is NULL\n", __FUNCTION__);
         return OSA_FALSE;
     }
 
-    status = pthread_attr_destroy(&pthread->attribute);
+    status = pthread_attr_destroy(&pthreadHand->attribute);
     if (OSA_isFalse(status))
     {
         OSA_ERROR("%s faild!\n", __FUNCTION__);
         handle_error_en(status, "pthread_attr_destroy");
     }
 
-    status = pthread_join(pthread->threadId, joinmsg);
+    status = pthread_join(pthreadHand->threadId, joinmsg);
     if (OSA_isFalse(status))
     {
         OSA_ERROR("%s faild!\n", __FUNCTION__);
         handle_error_en(status, "pthread_join");        
     }
 
-    OSA_INFO("thread %s delele. join value:%s\n", pthread->param.name, (char *)joinmsg);
-    memset(pthread->param.name, 0, THREAD_NAME_LEN);
+    OSA_INFO("thread %s delele. join value:%s\n", pthreadHand->param.name, (char *)joinmsg);
+    memset(pthreadHand->param.name, 0, THREAD_NAME_LEN);
     free(joinmsg);
     joinmsg = OSA_NULL;
 

@@ -6,32 +6,7 @@
             "   ./test.out -d ./data/  \n");
  }
 
-Int32 DEMO_destroy(WKFL_DEMO *pObj)
-{
-    free(pObj->dirInfo);
-    free(pObj->pfileInfo->pDataResult);
-    free(pObj->pfileInfo);
-    free(pObj);
-
-    return OSA_SOK;
-}
-
-Int32 DEMO_start(WKFL_DEMO *pObj, Char *dirpath)
-{
-    /* 1.calloc dir mem  2.preinit dir */
-    DIR_preInit(&pObj->dirInfo, dirpath);
-
-    /* 1. calloc file mem */
-    FILE_memoryInit(pObj->dirInfo, &pObj->pfileInfo);
-
-    /* 1. get all data-file result */
-    FILE_getResult(pObj->dirInfo, pObj->pfileInfo, 1);    
-
-    /* 1. creat threads */
-    //Thread_taskCreate(pObj);
-}
-
-Int32 main(Int32 argc, char *argv[])
+static void DEMO_paramCheck(Int32 argc, char *argv[], WKFL_DEMO **ppObj)
 {
     if (argc < 3)
     {
@@ -41,7 +16,9 @@ Int32 main(Int32 argc, char *argv[])
 
     Char  ch = 0;
     Char  *dirpath = OSA_NULL;
-    WKFL_DEMO  *pObj = (WKFL_DEMO *)calloc(1, sizeof(WKFL_DEMO));
+    *ppObj = (WKFL_DEMO *)calloc(1, sizeof(WKFL_DEMO));
+    (*ppObj)->dirpath = (Char *)calloc(1, 100);
+
 #if 0
     do
     {
@@ -56,6 +33,7 @@ Int32 main(Int32 argc, char *argv[])
                 break;
             case 'd':
                 dirpath = optarg;
+                memcpy((*ppObj)->dirpath, optarg, strlen(optarg));
                 break;
             default:
                 break;
@@ -63,9 +41,42 @@ Int32 main(Int32 argc, char *argv[])
     } while(ch > 0);
 #endif
 
-    dirpath = "./data/";
+    memcpy((*ppObj)->dirpath, "./data/", 8);
+}
 
-    DEMO_start(pObj, dirpath);
+Int32 DEMO_destroy(WKFL_DEMO *pObj)
+{
+    free(pObj->dirInfo);
+    free(pObj->pfileInfo->pDataResult);
+    free(pObj->pfileInfo);
+    free(pObj);
+    free(pObj->dirpath);
+
+    return OSA_SOK;
+}
+
+Int32 DEMO_start(WKFL_DEMO *pObj)
+{
+    /* 1.calloc dir mem  2.preinit dir */
+    DIR_preInit(&pObj->dirInfo, pObj->dirpath);
+
+    /* 1. calloc file mem */
+    FILE_memoryInit(pObj->dirInfo, &pObj->pfileInfo);
+
+    /* 1. get all data-file result */
+    FILE_getResult(pObj->dirInfo, pObj->pfileInfo, 1);    
+
+    /* 1. creat threads */
+    Thread_taskCreate(pObj);
+}
+
+Int32 main(Int32 argc, char *argv[])
+{
+    WKFL_DEMO *pObj = OSA_NULL;
+
+    DEMO_paramCheck(argc, argv, &pObj);
+
+    DEMO_start(pObj);
 
     DEMO_destroy(pObj);
 

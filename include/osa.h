@@ -89,4 +89,12 @@
 #define handle_error(msg) \
         do { perror(msg); exit(EXIT_FAILURE); } while (0)
 
+extern void OSA_mutexCreate(void *pmutex);
+extern void OSA_mutexLock(void *pmutex);
+extern void OSA_mutexUnLock(void *pmutex);
+extern void OSA_mutexDestroy(void *pmutex);
+extern int  OSA_threadCreate(void *pthreadHand);
+extern Int32  OSA_threadCancle(void *pthread);
+extern Int32  OSA_threadDelete(void *pthread);
+
 #endif

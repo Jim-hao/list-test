@@ -1,5 +1,14 @@
 TARGET=test_list
-CFLAGS+= -W -D$(print) #-fsanitize=address    # 从终端接收变量, 并传入代码。
+
+#ASAN=yes
+ASAN=no
+
+ifeq ($(ASAN), no)
+CFLAGS+= -W -D$(print)  # 从终端接收变量, 并传入代码。
+else ifeq ($(ASAN), yes)
+CFLAGS+= -W -D$(print) -fsanitize=address
+LDASAN=-lasan
+endif
 
 plat=x86
 ifeq ($(plat), x86)
@@ -14,7 +23,7 @@ objs=$(patsubst %.c, %.o, $(wildcard ./src/*.c))
 INC+=-I ./include
 
 OUTPUT=$(TARGET).$(plat)
-LDFLAGS= -o0 -g -lpthread #-lasan
+LDFLAGS= -o0 -g -lpthread  $(LSASAN)
 
 $(OUTPUT):$(objs)
 	$(CC) $^ $(CFLAGS) $(LDFLAGS) -o $(OUTPUT)

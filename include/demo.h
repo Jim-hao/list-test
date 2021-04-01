@@ -11,6 +11,7 @@ typedef struct wkfl_demo
     DirInfo    *dirInfo;
     FileInfo   *pfileInfo;
     OSA_Thread *pthreads;
+    Char       *dirpath;
     Int32       totoalLine;
     Int32       extThreadNum;
     OSA_mutex   wkflMutex;  
