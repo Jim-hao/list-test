@@ -68,6 +68,9 @@ Int32 DEMO_start(WKFL_DEMO *pObj)
 
     /* 1. creat threads */
     Thread_taskCreate(pObj);
+
+    /* 1. check result */
+    LIST_Data_Check();
 }
 
 Int32 main(Int32 argc, char *argv[])
@@ -80,6 +83,5 @@ Int32 main(Int32 argc, char *argv[])
 
     DEMO_destroy(pObj);
 
-    OSA_INFO("main exit\n");
     return  0;
 }

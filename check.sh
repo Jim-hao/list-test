@@ -42,13 +42,13 @@ do
        last_ch=${last_colum2:0:1}
        if [[ $ch == "+" && $last_ch == "-" ]];then
           result=`expr $colum1 - $last_colum1`
-       elif [ $ch == "-" && $last_ch == "+" ];then
+       elif [[ $ch == "-" && $last_ch == "+" ]];then
           result=`expr $last_colum1 - $colum1`
        fi
 
        sed -i '$d' $RESTFILE      
        #如果计算值为0，则不进行统计
-       if [ $result != "0" ];then
+       if [[ $result -ne "0" ]];then
           echo "$result " " ${colum2:1:5}" >> $RESTFILE
        fi
        continue

@@ -97,7 +97,7 @@ Int32  OSA_threadDelete(void *pHandle)
         handle_error_en(status, "pthread_join");        
     }
 
-    OSA_INFO("thread %s delele. join value:%s\n", pthreadHand->param.name, (char *)joinmsg);
+    //OSA_INFO("thread %s delele. join value:%s\n", pthreadHand->param.name, (char *)joinmsg);
     memset(pthreadHand->param.name, 0, THREAD_NAME_LEN);
     free(joinmsg);
     joinmsg = OSA_NULL;

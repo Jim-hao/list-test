@@ -53,8 +53,8 @@ Int32  FILE_memoryInit(DirInfo  *dirInfo, FileInfo  **ppfileInfo)
             Int32 len = strlen(dirInfo->dirpath) + strlen(ptr->d_name) + 1;
             snprintf(ptmpfile->fileName, len, "%s%s", dirInfo->dirpath, ptr->d_name);                    
             FILE_getlineNum(ptmpfile->fileName, &ptmpfile->lineNum);
-            OSA_INFO("file Name: %s  linenum:%d\n",  ptmpfile->fileName, ptmpfile->lineNum);
-            ptmpfile->pDataResult = (Char *)calloc(ptmpfile->lineNum, sizeof(Char) * 3);
+            //OSA_INFO("file Name: %s  linenum:%d\n",  ptmpfile->fileName, ptmpfile->lineNum);
+            ptmpfile->pDataResult = (Char *)calloc(ptmpfile->lineNum, sizeof(Char) * 4);
             ptmpfile++;
         }
     }
@@ -114,11 +114,12 @@ static void FILE_readcolum(Char *pline, Int32 columnNum, Char *result)
         sscanf(pline, cmd, pcolum[i]);
 
         /* analyse result */
-        result[0] = pcolum[i][1];
-        result[1] = pcolum[i][3];
-        result[2] = pcolum[i][5];
+        result[0] = pcolum[i][0];
+        result[1] = pcolum[i][1];
+        result[2] = pcolum[i][3];
+        result[3] = pcolum[i][5];
         //OSA_DEBUG("%5s\n",pcolum[i]);
-        //OSA_DEBUG("%1c%1c%1c\n", result[0], result[1], result[2]);
+        //OSA_DEBUG("%1c%1c%1c%1c\n", result[0], result[1], result[2], result[3]);
         memset(cmd, 0, sizeof(cmd));                
     }
  
@@ -148,7 +149,7 @@ static Int32  FILE_analyData(FileInfo *pfileInfo, Int32 columnNum)
     Int32 linenum = 0;
     while(getline(&pline, &bufflen, pfile) != -1)
     {    
-        FILE_readcolum(pline, columnNum, pfileInfo->pDataResult+(linenum*3));
+        FILE_readcolum(pline, columnNum, pfileInfo->pDataResult + (linenum*4));
         ++linenum;
     }
 
@@ -170,7 +171,7 @@ Int32 FILE_getResult(DirInfo *dirInfo, FileInfo *fileInfo, Int32 columNum)
 
     for (i = 0; i < dirInfo->fileNum; i++)
     {
-        OSA_INFO("analyse file: %s, %d\n", pfile->fileName, pfile->lineNum);
+        OSA_INFO("analyse file: %s, lineNum:%d\n", pfile->fileName, pfile->lineNum);
         FILE_analyData(pfile, columNum);
         pfile++;
     }

@@ -15,11 +15,12 @@ void *Thread_func(void *ptr)
     pid_t  tid = gettid();
     for (i = 0; i < pfile->lineNum; i++)
     {
-        Char *pdata = pfile->pDataResult + (i * 3);
+        Char *pdata = pfile->pDataResult + (i * 4);
         param.data  = pdata;
         param.type  = DATA_REDUCE;
         threadInfo->callback(&param);
-        //OSA_DEBUG("%s  %1c%1c%1c\n",threadInfo->name, pdata[0], pdata[1], pdata[2]);
+        //OSA_msleep(1);
+        //OSA_DEBUG("%s %1c%1c%1c%1c\n",threadInfo->name, pdata[0], pdata[1], pdata[2], pdata[3]);
     }
 
     OSA_mutexLock(&pObj->wkflMutex);
@@ -63,7 +64,7 @@ Int32  Thread_taskCreate(void *ptr)
     while(pObj->extThreadNum < pObj->dirInfo->fileNum)
     {
         OSA_msleep(100);
-        OSA_INFO("main is running  exitThreadNum:%d\n", pObj->extThreadNum);
+        //OSA_INFO("main is running  exitThreadNum:%d\n", pObj->extThreadNum);
     };
 
     //OSA_WARN("total line:%d\n", pObj->totoalLine);

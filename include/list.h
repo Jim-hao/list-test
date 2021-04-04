@@ -5,6 +5,24 @@
 
 #define SCENE_TYPE_TOTAL    (10)
 
+/* sceneType:  0  1  2
+   channel:    0  1  2  3
+   modeType:   0  1  2
+*/
+typedef enum
+{
+    SCENE_NORMAL = 0,
+    SCENE_FACE   = 1,
+    SCENE_BMD    = 2
+}SceneType;
+
+typedef enum
+{
+    MODE_PIC     = 0,
+    MODE_VIDEO   = 1,
+    MODE_BLACK   = 2
+}ModeType;
+
 typedef enum
 {
     DATA_REDUCE = 0,
@@ -28,12 +46,6 @@ typedef struct _NodeScene
     OSA_ListHead            listHead;
     Int32                   sceneType;
 }SceneManager;
-
-typedef  struct
-{
-    OSA_ListHead            hsceneNodeHead;
-    OSA_mutex               sceneListLock;
-} ALG_Mgr_ObjList;
 
 /*
     gmutex (gSceneHead)
@@ -59,13 +71,14 @@ typedef struct            /* 将算法信息加入scene list */
     OSA_ListHead             hsceneHead;
     Int32                    sceneType;
     ALG_Manager_ObjectInfo   algObjInfo;
-} ALG_Manager_ObjNodeInfo;
+} ALG_Manager_ObjNodeInfo;/* struct 1 */
 
 typedef struct
 {
     size_t                   checkSum;
-    Uint32                   camera_id;
-    Uint32                   enable;
+    Int32                   camera_id;
+    Int32                   enable;
+    Int32                    channel;
     OSA_mutex                enableMutex;
 } ALG_ManagerInfo;        /* wkfl信息 */
 typedef struct            /* 将wkfl信息加入bind list */
@@ -73,14 +86,33 @@ typedef struct            /* 将wkfl信息加入bind list */
     OSA_ListHead             bindList;
     OSA_ListHead             dualModeHead;
     ALG_ManagerInfo          pWkflInfoPriv;
-} ALG_Manager_WkflNodeInfo;
+} ALG_Manager_WkflNodeInfo;/* struct 2 */
 
 typedef struct
 {
     OSA_ListHead             dualList;
     Int32                    count; /* 遇到相同模式则先累加 */
     Int32                    mode;
-} DualModeInfo;
+} DualModeInfo;            /* struct 3 */
+
+#define MAX_DATA_NUM  (100)
+
+
+typedef struct
+{
+    Int32                    bindCount;
+    Int32                    bindInfo[MAX_DATA_NUM];
+} List_WkflCheck;
+typedef struct
+{
+    Int32                    wkflCount;
+    List_WkflCheck           wkflInfo[MAX_DATA_NUM];
+} List_SceneCheck;
+typedef struct
+{
+    Int32                    sceneCount;
+    List_SceneCheck          sceneInfo[MAX_DATA_NUM];
+} List_Check;
 
 #define  OSA_offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
 #define  OSA_listEntry(ptr, type, member) ({                            \
